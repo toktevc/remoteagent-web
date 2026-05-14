@@ -76,36 +76,8 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 
             cursor: pointer;
-        }
 
-        .command-row {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        #manualCommand {
-            flex: 1;
-
-            height: 52px;
-
-            border: 1px solid #999;
-
-            border-radius: 10px;
-
-            padding: 0 14px;
-
-            font-size: 15px;
-        }
-
-        .send {
-            color: #c8102e;
-
-            font-size: 34px;
-
-            font-weight: bold;
-
-            cursor: pointer;
+            font-size: 14px;
         }
 
         .status {
@@ -115,7 +87,7 @@
 
             font-size: 12px;
 
-            margin-top: 50px;
+            margin-top: 40px;
         }
 
         .clock {
@@ -131,7 +103,7 @@
         .log-panel {
             margin: 30px 12px 12px 12px;
 
-            height: 500px;
+            height: 600px;
 
             background: white;
 
@@ -177,6 +149,7 @@
 <div class="app">
 
     <div class="topbar">
+
         <div class="title">
             FOTONA REMOTE COMPANION
         </div>
@@ -184,6 +157,7 @@
         <div class="logo">
             Fotona<span class="dot">•</span>
         </div>
+
     </div>
 
     <div class="controls">
@@ -191,22 +165,6 @@
         <button onclick="requestErrorLog()">
             CONNECT & REFRESH LOGS
         </button>
-
-        <div class="command-row">
-
-            <input
-                id="manualCommand"
-                placeholder="Manual command..."
-            >
-
-            <div
-                class="send"
-                onclick="sendManualCommand()"
-            >
-                ➤
-            </div>
-
-        </div>
 
     </div>
 
@@ -395,10 +353,10 @@
     }
 
     // =====================================================
-    // SEND COMMAND
+    // REQUEST ERROR LOG
     // =====================================================
 
-    function sendCommand(command) {
+    function requestErrorLog() {
 
         if (!client.isConnected()) {
 
@@ -411,7 +369,7 @@
 
         const payload =
             JSON.stringify({
-                cmd: command
+                cmd: "ping"
             });
 
         const msg =
@@ -426,32 +384,8 @@
         client.send(msg);
 
         console.log(
-            "Command sent:",
-            payload
+            "Ping request sent"
         );
-    }
-
-    function requestErrorLog() {
-
-        sendCommand("ping");
-    }
-
-    function sendManualCommand() {
-
-        const value =
-            document
-                .getElementById("manualCommand")
-                .value
-                .trim();
-
-        if (!value)
-            return;
-
-        sendCommand(value);
-
-        document.getElementById(
-            "manualCommand"
-        ).value = "";
     }
 
     // =====================================================
