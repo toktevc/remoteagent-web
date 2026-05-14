@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="sl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>RemoteAgent Telemetrija</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
@@ -11,33 +13,42 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
             background: #f4f4f4;
+            font-family: Arial, sans-serif;
+
             display: flex;
             justify-content: center;
             align-items: center;
+
             height: 100vh;
         }
 
         .container {
+            width: 420px;
+
             background: white;
+
+            border-radius: 16px;
+
             padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+
             text-align: center;
-            width: 400px;
+
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         h1 {
-            margin-bottom: 20px;
+            margin-top: 0;
             color: #2c3e50;
         }
 
         #status {
             padding: 12px;
             border-radius: 8px;
+
             color: white;
             font-weight: bold;
+
             margin-bottom: 30px;
         }
 
@@ -52,20 +63,22 @@
         #data {
             font-size: 4em;
             font-weight: bold;
+
             color: #34495e;
+
             margin-top: 20px;
         }
 
         #topic {
-            margin-top: 20px;
+            margin-top: 25px;
             color: #7f8c8d;
             font-size: 0.9em;
         }
 
         .footer {
             margin-top: 30px;
-            font-size: 0.8em;
             color: #95a5a6;
+            font-size: 0.8em;
         }
     </style>
 </head>
@@ -73,6 +86,7 @@
 <body>
 
     <div class="container">
+
         <h1>RemoteAgent Telemetrija</h1>
 
         <div id="status" class="offline">
@@ -90,33 +104,46 @@
         <div class="footer">
             HiveMQ Cloud WebSocket Client
         </div>
+
     </div>
 
     <script>
+
         // =====================================================
-        // HIVE MQ CLOUD NASTAVITVE
+        // HIVE MQ CLOUD
         // =====================================================
 
-        const BROKER_HOST = "301419485918494c9fa6c2d055bbffe4.s1.eu.hivemq.cloud";
+        const BROKER_HOST =
+            "301419485918494c9fa6c2d055bbffe4.s1.eu.hivemq.cloud";
+
         const PORT = 8884;
-        const TOPIC = "javno/RemoteAgent/test";
 
-        // Tukaj vpiši svoj HiveMQ username/password
-        const USERNAME = "web_client";
-        const PASSWORD = "Web_client1";
+        const TOPIC =
+            "javno/RemoteAgent/test";
+
+        // =====================================================
+        // LOGIN
+        // =====================================================
+
+        const USERNAME = "cvetko_bridge";
+
+        const PASSWORD = "TVOJE_GESLO";
 
         // =====================================================
         // MQTT CLIENT
         // =====================================================
 
-        const clientID = "web_client_" + Math.random().toString(16).substring(2, 10);
+        const clientID =
+            "web_client_" +
+            Math.random().toString(16).substring(2, 10);
 
-        const client = new Paho.MQTT.Client(
-            BROKER_HOST,
-            PORT,
-            "/mqtt",
-            clientID
-        );
+        const client =
+            new Paho.MQTT.Client(
+                BROKER_HOST,
+                PORT,
+                "/mqtt",
+                clientID
+            );
 
         // =====================================================
         // CONNECTION LOST
@@ -124,13 +151,13 @@
 
         client.onConnectionLost = function(responseObject) {
 
+            console.log("Connection lost:", responseObject);
+
             document.getElementById("status").innerText =
                 "Povezava prekinjena";
 
             document.getElementById("status").className =
                 "offline";
-
-            console.log("Connection lost:", responseObject);
         };
 
         // =====================================================
@@ -158,15 +185,20 @@
             useSSL: true,
 
             userName: USERNAME,
-            password: PASSWORD,
 
-            reconnect: true,
+            password: PASSWORD,
 
             timeout: 5,
 
+            keepAliveInterval: 60,
+
+            cleanSession: true,
+
             onSuccess: function() {
 
-                console.log("Povezan na HiveMQ Cloud");
+                console.log(
+                    "Povezan na HiveMQ Cloud"
+                );
 
                 document.getElementById("status").innerText =
                     "Povezano na HiveMQ Cloud";
@@ -174,24 +206,36 @@
                 document.getElementById("status").className =
                     "online";
 
-                // Subscribe
+                // SUBSCRIBE
+
                 client.subscribe(TOPIC, {
 
                     qos: 0,
 
                     onSuccess: function() {
-                        console.log("Subscribed:", TOPIC);
+
+                        console.log(
+                            "Subscribed:",
+                            TOPIC
+                        );
                     },
 
                     onFailure: function(error) {
-                        console.log("Subscribe failed:", error);
+
+                        console.log(
+                            "Subscribe failed:",
+                            error
+                        );
                     }
                 });
             },
 
             onFailure: function(error) {
 
-                console.log("Connection failed:", error);
+                console.log(
+                    "Connection failed:",
+                    error
+                );
 
                 document.getElementById("status").innerText =
                     "Napaka pri povezavi";
@@ -204,4 +248,5 @@
     </script>
 
 </body>
+
 </html>
