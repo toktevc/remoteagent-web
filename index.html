@@ -1,205 +1,516 @@
 <!DOCTYPE html>
-<html lang="sl">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RemoteAgent Telemetrija</title>
+
+    <title>FOTONA Remote Companion</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
 
     <style>
         body {
             margin: 0;
-            padding: 0;
-            background: #f4f4f4;
+            background: #202124;
             font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
         }
 
-        .container {
-            width: 460px;
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        .app {
+            width: 100%;
+            max-width: 540px;
+            min-height: 100vh;
+            margin: 0 auto;
+            background: #ffffff;
+            position: relative;
         }
 
-        h1 {
-            margin-top: 0;
-            color: #2c3e50;
-        }
-
-        #status {
-            padding: 12px;
-            border-radius: 8px;
+        .topbar {
+            height: 70px;
+            background: #111;
             color: white;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 26px;
+            box-sizing: border-box;
+        }
+
+        .title {
+            font-size: 14px;
             font-weight: bold;
-            margin-bottom: 30px;
         }
 
-        .online {
-            background: #27ae60;
+        .logo {
+            font-size: 28px;
+            color: #888;
+            font-family: Georgia, serif;
         }
 
-        .offline {
-            background: #c0392b;
+        .dot {
+            color: red;
         }
 
-        #data {
-            font-size: 1.2em;
+        .controls {
+            padding: 20px 24px;
+        }
+
+        button {
+            margin: 0 auto 18px;
+
+            display: block;
+
+            background: #c8102e;
+            color: white;
+
+            border: none;
+
+            padding: 14px 24px;
+
+            border-radius: 4px;
+
             font-weight: bold;
-            color: #34495e;
-            margin-top: 20px;
-            word-break: break-word;
+
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+
+            cursor: pointer;
         }
 
-        #topic {
-            margin-top: 25px;
-            color: #7f8c8d;
-            font-size: 0.9em;
-            word-break: break-word;
+        .command-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
 
-        .footer {
-            margin-top: 30px;
-            color: #95a5a6;
-            font-size: 0.8em;
+        #manualCommand {
+            flex: 1;
+
+            height: 52px;
+
+            border: 1px solid #999;
+
+            border-radius: 10px;
+
+            padding: 0 14px;
+
+            font-size: 15px;
+        }
+
+        .send {
+            color: #c8102e;
+
+            font-size: 34px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+        }
+
+        .status {
+            text-align: center;
+
+            color: #777;
+
+            font-size: 12px;
+
+            margin-top: 50px;
+        }
+
+        .clock {
+            text-align: center;
+
+            color: #777;
+
+            font-size: 12px;
+
+            margin-top: 8px;
+        }
+
+        .log-panel {
+            margin: 30px 12px 12px 12px;
+
+            height: 500px;
+
+            background: white;
+
+            border-radius: 3px;
+
+            box-shadow: 0 0 8px rgba(0,0,0,0.45);
+
+            overflow-y: auto;
+
+            padding: 10px;
+
+            box-sizing: border-box;
+        }
+
+        .log-entry {
+            border-bottom: 2px solid #9ee7ff;
+
+            padding: 8px 0;
+        }
+
+        .log-meta {
+            color: #888;
+
+            font-size: 12px;
+
+            white-space: pre-wrap;
+        }
+
+        .log-message {
+            color: #f03b4f;
+
+            font-size: 14px;
+
+            font-weight: bold;
+
+            margin-top: 2px;
         }
     </style>
 </head>
 
 <body>
 
-<div class="container">
-    <h1>RemoteAgent Telemetrija</h1>
+<div class="app">
 
-    <div id="status" class="offline">
-        Povezujem se...
+    <div class="topbar">
+        <div class="title">
+            FOTONA REMOTE COMPANION
+        </div>
+
+        <div class="logo">
+            Fotona<span class="dot">•</span>
+        </div>
     </div>
 
-    <div id="data">
-        ---
+    <div class="controls">
+
+        <button onclick="requestErrorLog()">
+            CONNECT & REFRESH LOGS
+        </button>
+
+        <div class="command-row">
+
+            <input
+                id="manualCommand"
+                placeholder="Manual command..."
+            >
+
+            <div
+                class="send"
+                onclick="sendManualCommand()"
+            >
+                ➤
+            </div>
+
+        </div>
+
     </div>
 
-    <div id="topic">
-        Subscribe: javno/fotona/lw2/LWII00042/#<br>
-        Publish: javno/fotona/lw2/LWII00042/command
+    <div
+        id="connectionStatus"
+        class="status"
+    >
+        Status: CONNECTING
     </div>
 
-    <div class="footer">
-        HiveMQ Cloud WebSocket Client
+    <div
+        id="clock"
+        class="clock"
+    >
+        --
     </div>
+
+    <div
+        id="logPanel"
+        class="log-panel"
+    >
+        Waiting for error log...
+    </div>
+
 </div>
 
 <script>
-    const BROKER_HOST = "301419485918494c9fa6c2d055bbffe4.s1.eu.hivemq.cloud";
+
+    // =====================================================
+    // MQTT CONFIG
+    // =====================================================
+
+    const BROKER_HOST =
+        "301419485918494c9fa6c2d055bbffe4.s1.eu.hivemq.cloud";
+
     const PORT = 8884;
 
-    const STATUS_TOPIC = "javno/fotona/lw2/LWII00042/status";
-    const COMMAND_TOPIC = "javno/fotona/lw2/LWII00042/command";
+    const ERRORLOG_TOPIC =
+        "javno/fotona/lw2/LWII00042/errorlog";
+
+    const COMMAND_TOPIC =
+        "javno/fotona/lw2/LWII00042/command";
 
     const USERNAME = "test_web";
     const PASSWORD = "Test_web1";
 
-    const clientID =
-        "web_client_" + Math.random().toString(16).substring(2, 10);
+    // =====================================================
+    // CLOCK
+    // =====================================================
 
-    const client = new Paho.MQTT.Client(
-        BROKER_HOST,
-        PORT,
-        "/mqtt",
-        clientID
-    );
+    function updateClock() {
+
+        document.getElementById("clock").innerText =
+            new Date().toLocaleString();
+    }
+
+    setInterval(updateClock, 1000);
+
+    updateClock();
+
+    // =====================================================
+    // MQTT CLIENT
+    // =====================================================
+
+    const clientID =
+        "web_client_" +
+        Math.random().toString(16).substring(2, 10);
+
+    const client =
+        new Paho.MQTT.Client(
+            BROKER_HOST,
+            PORT,
+            "/mqtt",
+            clientID
+        );
+
+    // =====================================================
+    // CONNECTION LOST
+    // =====================================================
 
     client.onConnectionLost = function(responseObject) {
-        console.log("Connection lost:", responseObject);
 
-        document.getElementById("status").innerText =
-            "Povezava prekinjena";
+        console.log(
+            "Connection lost:",
+            responseObject
+        );
 
-        document.getElementById("status").className =
-            "offline";
+        document.getElementById(
+            "connectionStatus"
+        ).innerText =
+            "Status: DISCONNECTED";
     };
 
+    // =====================================================
+    // MESSAGE ARRIVED
+    // =====================================================
+
     client.onMessageArrived = function(message) {
+
         console.log(
-            "Prejeto:",
+            "Received:",
             message.destinationName,
             message.payloadString
         );
 
-        document.getElementById("data").innerText =
-            message.destinationName + " = " + message.payloadString;
+        try {
+
+            const obj =
+                JSON.parse(message.payloadString);
+
+            if (obj.log) {
+
+                renderErrorLog(obj.log);
+            }
+
+        } catch (e) {
+
+            console.log(
+                "JSON parse error:",
+                e
+            );
+
+            document.getElementById(
+                "logPanel"
+            ).innerText =
+                message.payloadString;
+        }
     };
 
-    function sendPongToSbc() {
-        const payload = JSON.stringify({
-            cmd: "ping"
-        });
+    // =====================================================
+    // RENDER ERROR LOG
+    // =====================================================
 
-        const msg = new Paho.MQTT.Message(payload);
+    function renderErrorLog(rawLog) {
 
-        msg.destinationName = COMMAND_TOPIC;
+        const panel =
+            document.getElementById("logPanel");
+
+        panel.innerHTML = "";
+
+        const lines =
+            rawLog
+                .split("\n")
+                .filter(line => line.trim() !== "");
+
+        for (let i = 0; i < lines.length; i += 3) {
+
+            const meta1 =
+                lines[i] || "";
+
+            const meta2 =
+                lines[i + 1] || "";
+
+            const msg =
+                lines[i + 2] || "";
+
+            const entry =
+                document.createElement("div");
+
+            entry.className =
+                "log-entry";
+
+            const meta =
+                document.createElement("div");
+
+            meta.className =
+                "log-meta";
+
+            meta.innerText =
+                meta1 + "\n" + meta2;
+
+            const message =
+                document.createElement("div");
+
+            message.className =
+                "log-message";
+
+            message.innerText =
+                msg;
+
+            entry.appendChild(meta);
+            entry.appendChild(message);
+
+            panel.appendChild(entry);
+        }
+    }
+
+    // =====================================================
+    // SEND COMMAND
+    // =====================================================
+
+    function sendCommand(command) {
+
+        if (!client.isConnected()) {
+
+            console.log(
+                "MQTT not connected"
+            );
+
+            return;
+        }
+
+        const payload =
+            JSON.stringify({
+                cmd: command
+            });
+
+        const msg =
+            new Paho.MQTT.Message(payload);
+
+        msg.destinationName =
+            COMMAND_TOPIC;
+
         msg.qos = 0;
         msg.retained = false;
 
         client.send(msg);
 
-        console.log("Poslano na SBC:", COMMAND_TOPIC, payload);
+        console.log(
+            "Command sent:",
+            payload
+        );
     }
 
+    function requestErrorLog() {
+
+        sendCommand("ping");
+    }
+
+    function sendManualCommand() {
+
+        const value =
+            document
+                .getElementById("manualCommand")
+                .value
+                .trim();
+
+        if (!value)
+            return;
+
+        sendCommand(value);
+
+        document.getElementById(
+            "manualCommand"
+        ).value = "";
+    }
+
+    // =====================================================
+    // CONNECT
+    // =====================================================
+
     client.connect({
+
         useSSL: true,
+
         userName: USERNAME,
+
         password: PASSWORD,
+
         timeout: 5,
+
         keepAliveInterval: 60,
+
         cleanSession: true,
 
         onSuccess: function() {
-            console.log("Povezan na HiveMQ Cloud");
 
-            document.getElementById("status").innerText =
-                "Povezano na HiveMQ Cloud";
+            document.getElementById(
+                "connectionStatus"
+            ).innerText =
+                "Status: CONNECTED";
 
-            document.getElementById("status").className =
-                "online";
+            client.subscribe(
+                ERRORLOG_TOPIC,
+                {
+                    qos: 0,
 
-            client.subscribe(STATUS_TOPIC, {
-                qos: 0,
+                    onSuccess: function() {
 
-                onSuccess: function() {
-                    console.log("Subscribed:", STATUS_TOPIC);
+                        console.log(
+                            "Subscribed:",
+                            ERRORLOG_TOPIC
+                        );
 
-                    sendPongToSbc();
-                },
-
-                onFailure: function(error) {
-                    console.log("Subscribe failed:", error);
-
-                    document.getElementById("status").innerText =
-                        "Napaka pri subscribe";
-
-                    document.getElementById("status").className =
-                        "offline";
+                        requestErrorLog();
+                    }
                 }
-            });
+            );
         },
 
         onFailure: function(error) {
-            console.log("Connection failed:", error);
 
-            document.getElementById("status").innerText =
-                "Napaka pri povezavi";
+            console.log(
+                "Connection failed:",
+                error
+            );
 
-            document.getElementById("status").className =
-                "offline";
+            document.getElementById(
+                "connectionStatus"
+            ).innerText =
+                "Status: CONNECTION FAILED";
         }
     });
+
 </script>
 
 </body>
