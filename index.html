@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="sl">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>RemoteAgent Telemetrija</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
@@ -15,25 +13,18 @@
             padding: 0;
             background: #f4f4f4;
             font-family: Arial, sans-serif;
-
             display: flex;
             justify-content: center;
             align-items: center;
-
             height: 100vh;
         }
 
         .container {
-            width: 420px;
-
+            width: 460px;
             background: white;
-
             border-radius: 16px;
-
             padding: 40px;
-
             text-align: center;
-
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
@@ -45,10 +36,8 @@
         #status {
             padding: 12px;
             border-radius: 8px;
-
             color: white;
             font-weight: bold;
-
             margin-bottom: 30px;
         }
 
@@ -61,18 +50,18 @@
         }
 
         #data {
-            font-size: 4em;
+            font-size: 1.2em;
             font-weight: bold;
-
             color: #34495e;
-
             margin-top: 20px;
+            word-break: break-word;
         }
 
         #topic {
             margin-top: 25px;
             color: #7f8c8d;
             font-size: 0.9em;
+            word-break: break-word;
         }
 
         .footer {
@@ -85,168 +74,133 @@
 
 <body>
 
-    <div class="container">
+<div class="container">
+    <h1>RemoteAgent Telemetrija</h1>
 
-        <h1>RemoteAgent Telemetrija</h1>
-
-        <div id="status" class="offline">
-            Povezujem se...
-        </div>
-
-        <div id="data">
-            ---
-        </div>
-
-        <div id="topic">
-            MQTT Topic: javno/RemoteAgent/test
-        </div>
-
-        <div class="footer">
-            HiveMQ Cloud WebSocket Client
-        </div>
-
+    <div id="status" class="offline">
+        Povezujem se...
     </div>
 
-    <script>
+    <div id="data">
+        ---
+    </div>
 
-        // =====================================================
-        // HIVE MQ CLOUD
-        // =====================================================
+    <div id="topic">
+        Subscribe: javno/fotona/lw2/LWII00042/status<br>
+        Publish: javno/fotona/lw2/LWII00042/command
+    </div>
 
-        const BROKER_HOST =
-            "301419485918494c9fa6c2d055bbffe4.s1.eu.hivemq.cloud";
+    <div class="footer">
+        HiveMQ Cloud WebSocket Client
+    </div>
+</div>
 
-        const PORT = 8884;
+<script>
+    const BROKER_HOST = "301419485918494c9fa6c2d055bbffe4.s1.eu.hivemq.cloud";
+    const PORT = 8884;
 
-        const TOPIC =
-            "javno/#";
+    const STATUS_TOPIC = "javno/fotona/lw2/LWII00042/status";
+    const COMMAND_TOPIC = "javno/fotona/lw2/LWII00042/command";
 
-        // =====================================================
-        // LOGIN
-        // =====================================================
+    const USERNAME = "web_client";
+    const PASSWORD = "Web_client1";
 
-        const USERNAME = "test_web";
+    const clientID =
+        "web_client_" + Math.random().toString(16).substring(2, 10);
 
-        const PASSWORD = "Test_web1";
+    const client = new Paho.MQTT.Client(
+        BROKER_HOST,
+        PORT,
+        "/mqtt",
+        clientID
+    );
 
-        // =====================================================
-        // MQTT CLIENT
-        // =====================================================
+    client.onConnectionLost = function(responseObject) {
+        console.log("Connection lost:", responseObject);
 
-        const clientID =
-            "web_client_" +
-            Math.random().toString(16).substring(2, 10);
+        document.getElementById("status").innerText =
+            "Povezava prekinjena";
 
-        const client =
-            new Paho.MQTT.Client(
-                BROKER_HOST,
-                PORT,
-                "/mqtt",
-                clientID
-            );
+        document.getElementById("status").className =
+            "offline";
+    };
 
-        // =====================================================
-        // CONNECTION LOST
-        // =====================================================
+    client.onMessageArrived = function(message) {
+        console.log(
+            "Prejeto:",
+            message.destinationName,
+            message.payloadString
+        );
 
-        client.onConnectionLost = function(responseObject) {
+        document.getElementById("data").innerText =
+            message.destinationName + " = " + message.payloadString;
+    };
 
-            console.log("Connection lost:", responseObject);
+    function sendPongToSbc() {
+        const payload = JSON.stringify({
+            cmd: "pong"
+        });
+
+        const msg = new Paho.MQTT.Message(payload);
+
+        msg.destinationName = COMMAND_TOPIC;
+        msg.qos = 0;
+        msg.retained = false;
+
+        client.send(msg);
+
+        console.log("Poslano na SBC:", COMMAND_TOPIC, payload);
+    }
+
+    client.connect({
+        useSSL: true,
+        userName: USERNAME,
+        password: PASSWORD,
+        timeout: 5,
+        keepAliveInterval: 60,
+        cleanSession: true,
+
+        onSuccess: function() {
+            console.log("Povezan na HiveMQ Cloud");
 
             document.getElementById("status").innerText =
-                "Povezava prekinjena";
+                "Povezano na HiveMQ Cloud";
+
+            document.getElementById("status").className =
+                "online";
+
+            client.subscribe(STATUS_TOPIC, {
+                qos: 0,
+
+                onSuccess: function() {
+                    console.log("Subscribed:", STATUS_TOPIC);
+
+                    sendPongToSbc();
+                },
+
+                onFailure: function(error) {
+                    console.log("Subscribe failed:", error);
+
+                    document.getElementById("status").innerText =
+                        "Napaka pri subscribe";
+
+                    document.getElementById("status").className =
+                        "offline";
+                }
+            });
+        },
+
+        onFailure: function(error) {
+            console.log("Connection failed:", error);
+
+            document.getElementById("status").innerText =
+                "Napaka pri povezavi";
 
             document.getElementById("status").className =
                 "offline";
-        };
-
-        // =====================================================
-        // MESSAGE ARRIVED
-        // =====================================================
-
-        client.onMessageArrived = function(message) {
-
-            console.log(
-                "Prejeto:",
-                message.destinationName,
-                message.payloadString
-            );
-
-            document.getElementById("data").innerText =
-                message.payloadString;
-        };
-
-        // =====================================================
-        // CONNECT
-        // =====================================================
-
-        client.connect({
-
-            useSSL: true,
-
-            userName: USERNAME,
-
-            password: PASSWORD,
-
-            timeout: 5,
-
-            keepAliveInterval: 60,
-
-            cleanSession: true,
-
-            onSuccess: function() {
-
-                console.log(
-                    "Povezan na HiveMQ Cloud"
-                );
-
-                document.getElementById("status").innerText =
-                    "Povezano na HiveMQ Cloud";
-
-                document.getElementById("status").className =
-                    "online";
-
-                // SUBSCRIBE
-
-                client.subscribe(TOPIC, {
-
-                    qos: 0,
-
-                    onSuccess: function() {
-
-                        console.log(
-                            "Subscribed:",
-                            TOPIC
-                        );
-                    },
-
-                    onFailure: function(error) {
-
-                        console.log(
-                            "Subscribe failed:",
-                            error
-                        );
-                    }
-                });
-            },
-
-            onFailure: function(error) {
-
-                console.log(
-                    "Connection failed:",
-                    error
-                );
-
-                document.getElementById("status").innerText =
-                    "Napaka pri povezavi";
-
-                document.getElementById("status").className =
-                    "offline";
-            }
-        });
-
-    </script>
+        }
+    });
+</script>
 
 </body>
-
 </html>
