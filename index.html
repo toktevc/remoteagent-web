@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RemoteAgent Telemetrija</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 400px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        #status {
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .online {
+            background: #27ae60;
+        }
+
+        .offline {
+            background: #c0392b;
+        }
+
+        #data {
+            font-size: 4em;
+            font-weight: bold;
+            color: #34495e;
+            margin-top: 20px;
+        }
+
+        #topic {
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
+        .footer {
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>RemoteAgent Telemetrija</h1>
+
+        <div id="status" class="offline">
+            Povezujem se...
+        </div>
+
+        <div id="data">
+            ---
+        </div>
+
+        <div id="topic">
+            MQTT Topic: javno/RemoteAgent/test
+        </div>
+
+        <div class="footer">
+            HiveMQ Cloud WebSocket Client
+        </div>
+    </div>
+
+    <script>
+        // =====================================================
+        // HIVE MQ CLOUD NASTAVITVE
+        // =====================================================
+
+        const BROKER_HOST = "301419485918494c9fa6c2d055bbffe4.s1.eu.hivemq.cloud";
+        const PORT = 8884;
+        const TOPIC = "javno/RemoteAgent/test";
+
+        // Tukaj vpiši svoj HiveMQ username/password
+        const USERNAME = "web_client";
+        const PASSWORD = "Web_client1";
+
+        // =====================================================
+        // MQTT CLIENT
+        // =====================================================
+
+        const clientID = "web_client_" + Math.random().toString(16).substring(2, 10);
+
+        const client = new Paho.MQTT.Client(
+            BROKER_HOST,
+            PORT,
+            "/mqtt",
+            clientID
+        );
+
+        // =====================================================
+        // CONNECTION LOST
+        // =====================================================
+
+        client.onConnectionLost = function(responseObject) {
+
+            document.getElementById("status").innerText =
+                "Povezava prekinjena";
+
+            document.getElementById("status").className =
+                "offline";
+
+            console.log("Connection lost:", responseObject);
+        };
+
+        // =====================================================
+        // MESSAGE ARRIVED
+        // =====================================================
+
+        client.onMessageArrived = function(message) {
+
+            console.log(
+                "Prejeto:",
+                message.destinationName,
+                message.payloadString
+            );
+
+            document.getElementById("data").innerText =
+                message.payloadString;
+        };
+
+        // =====================================================
+        // CONNECT
+        // =====================================================
+
+        client.connect({
+
+            useSSL: true,
+
+            userName: USERNAME,
+            password: PASSWORD,
+
+            reconnect: true,
+
+            timeout: 5,
+
+            onSuccess: function() {
+
+                console.log("Povezan na HiveMQ Cloud");
+
+                document.getElementById("status").innerText =
+                    "Povezano na HiveMQ Cloud";
+
+                document.getElementById("status").className =
+                    "online";
+
+                // Subscribe
+                client.subscribe(TOPIC, {
+
+                    qos: 0,
+
+                    onSuccess: function() {
+                        console.log("Subscribed:", TOPIC);
+                    },
+
+                    onFailure: function(error) {
+                        console.log("Subscribe failed:", error);
+                    }
+                });
+            },
+
+            onFailure: function(error) {
+
+                console.log("Connection failed:", error);
+
+                document.getElementById("status").innerText =
+                    "Napaka pri povezavi";
+
+                document.getElementById("status").className =
+                    "offline";
+            }
+        });
+
+    </script>
+
+</body>
+</html>
