@@ -104,6 +104,14 @@
             word-break: break-word;
         }
 
+        .device-value.state-idle {
+            color: #999;
+        }
+
+        .device-value.state-lowpower {
+            color: #3498db;
+        }
+
         .device-value.state-standby {
             color: #27ae60;
         }
@@ -217,11 +225,7 @@
             FOTONA REMOTE COMPANION
         </div>
 
-        <img
-            src="logo.png"
-            class="logo-img"
-            alt="Fotona Logo"
-        >
+        <img src="logo.png" class="logo-img" alt="Fotona Logo">
     </div>
 
     <div class="controls">
@@ -248,18 +252,11 @@
     </div>
 
     <div class="shots-card">
-        <div class="shots-label">
-            TOTAL SHOTS
-        </div>
-
-        <div id="totalShots" class="shots-value">
-            ---
-        </div>
+        <div class="shots-label">TOTAL SHOTS</div>
+        <div id="totalShots" class="shots-value">---</div>
     </div>
 
-    <div class="section-title">
-        ERROR LOG
-    </div>
+    <div class="section-title">ERROR LOG</div>
 
     <div id="logPanel" class="log-panel">
         Waiting for error log...
@@ -269,9 +266,7 @@
         Status: CONNECTING
     </div>
 
-    <div id="clock" class="clock">
-        --
-    </div>
+    <div id="clock" class="clock">--</div>
 
 </div>
 
@@ -381,6 +376,8 @@
             value;
 
         el.classList.remove(
+            "state-idle",
+            "state-lowpower",
             "state-standby",
             "state-ready",
             "state-emission",
@@ -392,7 +389,15 @@
         const normalized =
             value.toString().toUpperCase();
 
-        if (normalized === "STANDBY") {
+        if (normalized === "IDLE") {
+
+            el.classList.add("state-idle");
+
+        } else if (normalized === "LOW-POWER") {
+
+            el.classList.add("state-lowpower");
+
+        } else if (normalized === "STANDBY") {
 
             el.classList.add("state-standby");
 
