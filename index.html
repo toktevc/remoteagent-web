@@ -104,30 +104,30 @@
             word-break: break-word;
         }
 
-        .state-standby {
-	    color: #27ae60;
-	}
+        .device-value.state-standby {
+            color: #27ae60;
+        }
 
-	.state-ready {
-	    color: #c8102e;
-	}
+        .device-value.state-ready {
+            color: #c8102e;
+        }
 
-	.state-emission {
-	    color: #c8102e;
-	    font-weight: bold;
-	}
+        .device-value.state-emission {
+            color: #c8102e;
+            font-weight: bold;
+        }
 
-	.state-selftest {
-	    color: #f39c12;
-	}
+        .device-value.state-selftest {
+            color: #f39c12;
+        }
 
-	.state-error {
-	    color: #c8102e;
-	}
+        .device-value.state-error {
+            color: #c8102e;
+        }
 
-	.state-unknown {
-	    color: #999;
-	}
+        .device-value.state-unknown {
+            color: #999;
+        }
 
         .shots-card {
             margin: 14px 24px 0 24px;
@@ -243,7 +243,7 @@
 
         <div class="device-row">
             <span class="device-label">MACHINE STATE</span>
-            <span id="machineState" class="device-value">---</span>
+            <span id="machineState" class="device-value state-unknown">---</span>
         </div>
     </div>
 
@@ -371,50 +371,56 @@
     };
 
     function updateMachineState(state) {
-    const el =
-        document.getElementById("machineState");
+        const el =
+            document.getElementById("machineState");
 
-    const value =
-        state || "---";
+        const value =
+            state || "---";
 
-    el.innerText =
-        value;
+        el.innerText =
+            value;
 
-    el.classList.remove(
-        "state-standby",
-        "state-ready",
-        "state-emission",
-        "state-selftest",
-        "state-error",
-        "state-unknown"
-    );
+        el.classList.remove(
+            "state-standby",
+            "state-ready",
+            "state-emission",
+            "state-selftest",
+            "state-error",
+            "state-unknown"
+        );
 
-    const normalized =
-        value.toString().toUpperCase();
+        const normalized =
+            value.toString().toUpperCase();
 
-    if (normalized === "STANDBY") {
-    	el.classList.add("state-standby");
-    
-    } else if (normalized === "READY") {
-    	el.classList.add("state-ready");
+        if (normalized === "STANDBY") {
 
-    } else if (normalized === "EMISSION") {
-    	el.classList.add("state-emission");
+            el.classList.add("state-standby");
 
-    } else if (normalized === "SELF-TEST") {
-        el.classList.add("state-selftest");
+        } else if (normalized === "READY") {
 
-    } else if (
-        normalized.includes("ERROR") ||
-        normalized.includes("FAULT") ||
-        normalized.includes("ALARM")
-    ) {
-        el.classList.add("state-error");
+            el.classList.add("state-ready");
 
-    } else {
-        el.classList.add("state-unknown");
+        } else if (normalized === "EMISSION") {
+
+            el.classList.add("state-emission");
+
+        } else if (normalized === "SELF-TEST") {
+
+            el.classList.add("state-selftest");
+
+        } else if (
+            normalized.includes("ERROR") ||
+            normalized.includes("FAULT") ||
+            normalized.includes("ALARM")
+        ) {
+
+            el.classList.add("state-error");
+
+        } else {
+
+            el.classList.add("state-unknown");
+        }
     }
-}
 
     function renderErrorLog(rawLog) {
         const panel =
