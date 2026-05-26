@@ -104,17 +104,30 @@
             word-break: break-word;
         }
 
-        .state-ready {
-            color: #27ae60;
-        }
+        .state-standby {
+	    color: #27ae60;
+	}
 
-        .state-warning {
-            color: #f39c12;
-        }
+	.state-ready {
+	    color: #c8102e;
+	}
 
-        .state-error {
-            color: #c8102e;
-        }
+	.state-emission {
+	    color: #c8102e;
+	    font-weight: bold;
+	}
+
+	.state-selftest {
+	    color: #f39c12;
+	}
+
+	.state-error {
+	    color: #c8102e;
+	}
+
+	.state-unknown {
+	    color: #999;
+	}
 
         .shots-card {
             margin: 14px 24px 0 24px;
@@ -358,42 +371,50 @@
     };
 
     function updateMachineState(state) {
-        const el =
-            document.getElementById("machineState");
+    const el =
+        document.getElementById("machineState");
 
-        const value =
-            state || "---";
+    const value =
+        state || "---";
 
-        el.innerText =
-            value;
+    el.innerText =
+        value;
 
-        el.classList.remove(
-            "state-ready",
-            "state-warning",
-            "state-error"
-        );
+    el.classList.remove(
+        "state-standby",
+        "state-ready",
+        "state-emission",
+        "state-selftest",
+        "state-error",
+        "state-unknown"
+    );
 
-        const normalized =
-            value.toString().toLowerCase();
+    const normalized =
+        value.toString().toUpperCase();
 
-        if (
-            normalized.includes("ready") ||
-            normalized.includes("idle") ||
-            normalized.includes("standby")
-        ) {
-            el.classList.add("state-ready");
-        } else if (
-            normalized.includes("error") ||
-            normalized.includes("fault") ||
-            normalized.includes("alarm")
-        ) {
-            el.classList.add("state-error");
-        } else if (
-            normalized !== "---"
-        ) {
-            el.classList.add("state-warning");
-        }
+    if (normalized === "STANDBY") {
+    	el.classList.add("state-standby");
+    
+    } else if (normalized === "READY") {
+    	el.classList.add("state-ready");
+
+    } else if (normalized === "EMISSION") {
+    	el.classList.add("state-emission");
+
+    } else if (normalized === "SELF-TEST") {
+        el.classList.add("state-selftest");
+
+    } else if (
+        normalized.includes("ERROR") ||
+        normalized.includes("FAULT") ||
+        normalized.includes("ALARM")
+    ) {
+        el.classList.add("state-error");
+
+    } else {
+        el.classList.add("state-unknown");
     }
+}
 
     function renderErrorLog(rawLog) {
         const panel =
