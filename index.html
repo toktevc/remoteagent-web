@@ -235,6 +235,11 @@
     </div>
 
     <div class="device-card">
+    	<div class="device-row">
+	    <span class="device-label">URL SERIAL</span>
+	    <span id="urlSerial" class="device-value">---</span>
+	</div>
+	
         <div class="device-row">
             <span class="device-label">SERIAL NUMBER</span>
             <span id="serialNumber" class="device-value">---</span>
@@ -276,11 +281,22 @@
 
     const PORT = 8884;
 
+    const params =
+    new URLSearchParams(window.location.search);
+
+    const SERIAL =
+    	params.get("serial") || "unknown";
+    	
+    window.addEventListener("DOMContentLoaded", function() {
+    	document.getElementById("urlSerial").innerText =
+        	SERIAL;
+    });
+
     const DEVICE_TOPIC =
-        "javno/fotona/lw2/LWII00042/#";
+    	`javno/fotona/devices/${SERIAL}/#`;
 
     const COMMAND_TOPIC =
-        "javno/fotona/lw2/LWII00042/command";
+    	`javno/fotona/devices/${SERIAL}/command`;
 
     const USERNAME = "test_web";
     const PASSWORD = "Test_web1";
